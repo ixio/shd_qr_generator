@@ -16,7 +16,7 @@
       </tr>
     </table>
     <br/>
-    <table id="input_names" border="1px" cellpadding="10px"></table>
+    <div id="input_names" pages="">
 
     <script type="text/javascript">
 
@@ -31,18 +31,24 @@
     }
 
     function printCSV(text) {
+      div_input_names = document.getElementById("input_names")
       innerHTML = ""
       lines = text.split('\n')
-      for (var i = 0; i < lines.length; i++) {
-        line = lines[i]
-        if (line != "") {
-          innerHTML += "<tr><td colspan=2>"
-          innerHTML += "<canvas id=\"canvas-" + i + "\" width=\"140\" height=\"30\"></td></tr>"
-          innerHTML += "<tr><td><div id=\"qrcode1-" + i + "\"></div></td>"
-          innerHTML += "<td><div id=\"qrcode2-" + i + "\"></div></td></tr>"
+      for (var p = 0; p <= ~~(lines.length / 6); p++) {
+        innerHTML += "<table id=\"page-" + p + "\" border=\"1px\" cellpadding=\"10px\">"
+        for (var i = p*6; i < Math.min(p*6 + 6, lines.length); i++) {
+          line = lines[i]
+          if (line != "") {
+            innerHTML += "<tr><td colspan=2>"
+            innerHTML += "<canvas id=\"canvas-" + i + "\" width=\"140\" height=\"30\"></td></tr>"
+            innerHTML += "<tr><td><div id=\"qrcode1-" + i + "\"></div></td>"
+            innerHTML += "<td><div id=\"qrcode2-" + i + "\"></div></td></tr>"
+          }
         }
+        innerHTML += "</table>"
+        div_input_names.setAttribute("pages", p + 1)
       }
-      document.getElementById("input_names").innerHTML = innerHTML
+      div_input_names.innerHTML = innerHTML
       for (var i = 0; i < lines.length; i++) {
         line = lines[i]
         if (line != "") {
@@ -62,7 +68,6 @@
     }
 
     function handleFiles(files) {
-      console.log(files[0])
       var reader = new FileReader();
       var res = null
       reader.onload = function(e) {
@@ -71,17 +76,32 @@
       reader.readAsText(files[0])
     }
 
+    function aux_print_iframe(pdf) {
+      var iframe = document.createElement('iframe');
+      iframe.setAttribute('style','position:absolute;right:0; top:0; bottom:0; height:100%; width:500px');
+      document.body.appendChild(iframe);
+      iframe.src = pdf.output('datauristring');
+    }
+
+    function aux_next_page(pdf) {
+      pdf.addPage()
+      curr_page = parseInt(document.getElementById("input_names").getAttribute("curr_page"))
+      if (curr_page + 1 == parseInt(document.getElementById("input_names").getAttribute("pages"))) {
+        fun_callback = aux_print_iframe
+      } else {
+        fun_callback = aux_next_page
+      }
+      document.getElementById("input_names").setAttribute("curr_page", curr_page + 1)
+      html2pdf(document.getElementById("page-" + curr_page).outerHTML, pdf, fun_callback)
+    }
+
     function generate_pdf() {
       var pdf = new jsPDF('p', 'pt', 'a4');
       pdf.canvas.height = 72 * 11;
       pdf.canvas.width = 72 * 8.5;
-      html2pdf(document.getElementById("input_names").outerHTML, pdf, function(pdf){
-        var iframe = document.createElement('iframe');
-        iframe.setAttribute('style','position:absolute;right:0; top:0; bottom:0; height:100%; width:500px');
-        document.body.appendChild(iframe);
-        iframe.src = pdf.output('datauristring');
-      });
-      doc.save('a4.pdf')
+      document.getElementById("input_names").setAttribute("curr_page", 1)
+      html2pdf(document.getElementById("page-0").outerHTML, pdf, aux_next_page)
+      //doc.save('a4.pdf')
     }
     </script>
   </body>
