@@ -20,24 +20,43 @@
 
     <script type="text/javascript">
 
+    function canvas2img(canvasID) {
+      var canvas = document.getElementById(canvasID);
+      var ctx = canvas.getContext("2d");
+      ctx.font = "16px Arial";
+      ctx.fillText(line,8,20);
+      canvas.setAttribute("style", "display: none;")
+      var img    = canvas.toDataURL("image/png");
+      canvas.insertAdjacentHTML("afterend","<img src=\""+img+"\"/>")
+    }
+
     function printCSV(text) {
       innerHTML = ""
       lines = text.split('\n')
       for (var i = 0; i < lines.length; i++) {
         line = lines[i]
         if (line != "") {
-          innerHTML += "<tr><td>" + line + "</td><td><div id=\"qrcode " + line + "\"></div></td></tr>"
+          innerHTML += "<tr><td colspan=2>"
+          innerHTML += "<canvas id=\"canvas-" + i + "\" width=\"140\" height=\"30\"></td></tr>"
+          innerHTML += "<tr><td><div id=\"qrcode1-" + i + "\"></div></td>"
+          innerHTML += "<td><div id=\"qrcode2-" + i + "\"></div></td></tr>"
         }
       }
       document.getElementById("input_names").innerHTML = innerHTML
       for (var i = 0; i < lines.length; i++) {
         line = lines[i]
         if (line != "") {
-          var qrcode = new QRCode(document.getElementById("qrcode " + line), {
-            width : 100,
-            height : 100
+          canvas2img("canvas-" + i)
+          var qrcode1 = new QRCode(document.getElementById("qrcode1-" + i), {
+            width : 50,
+            height : 50
           });
-          qrcode.makeCode(line)
+          var qrcode2 = new QRCode(document.getElementById("qrcode2-" + i), {
+            width : 50,
+            height : 50
+          });
+          qrcode1.makeCode(line)
+          qrcode2.makeCode(line)
         }
       }
     }
