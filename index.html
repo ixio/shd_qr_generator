@@ -1,42 +1,47 @@
 <html>
   <head>
-    <title>Cross-Browser QRCode generator for Javascript</title>
+    <meta charset="utf-8" />
+    <title>Generation de QR-codes pour cartes</title>
     <script type="text/javascript" src="jquery.min.js"></script>
     <script type="text/javascript" src="qrcode.min.js"></script>
   </head>
   <body>
-    <input id="text" type="text" value="http://jindo.dev.naver.com/collie" style="width:200px" /><br />
-    <div id="qrcode" style="width:100px; height:100px; margin-top:15px;"></div>
+    <input type="file" id="input" onchange="handleFiles(this.files)"><br/>
+    <table id="input_names" border="1px" cellpadding="10px"></table>
 
     <script type="text/javascript">
-    var qrcode = new QRCode(document.getElementById("qrcode"), {
-    	width : 100,
-    	height : 100
-    });
 
-    function makeCode () {		
-    	var elText = document.getElementById("text");
-    	
-    	if (!elText.value) {
-    		alert("Input a text");
-    		elText.focus();
-    		return;
-    	}
-    	
-    	qrcode.makeCode(elText.value);
+    function printCSV(text) {
+      innerHTML = ""
+      lines = text.split('\n')
+      for (var i = 0; i < lines.length; i++) {
+        line = lines[i]
+        if (line != "") {
+          innerHTML += "<tr><td>" + line + "</td><td><div id=\"qrcode " + line + "\"></div></td></tr>"
+        }
+      }
+      document.getElementById("input_names").innerHTML = innerHTML
+      for (var i = 0; i < lines.length; i++) {
+        line = lines[i]
+        if (line != "") {
+          var qrcode = new QRCode(document.getElementById("qrcode " + line), {
+            width : 100,
+            height : 100
+          });
+          qrcode.makeCode(line)
+        }
+      }
     }
 
-    makeCode();
-
-    $("#text").
-    	on("blur", function () {
-    		makeCode();
-    	}).
-    	on("keydown", function (e) {
-    		if (e.keyCode == 13) {
-    			makeCode();
-    		}
-    	});
+    function handleFiles(files) {
+      console.log(files[0])
+      var reader = new FileReader();
+      var res = null
+      reader.onload = function(e) {
+        printCSV(reader.result)
+      }
+      reader.readAsText(files[0])
+    }
     </script>
   </body>
 </html>
